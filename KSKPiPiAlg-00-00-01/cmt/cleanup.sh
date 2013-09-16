@@ -4,6 +4,6 @@ fi
 . ${CMTROOT}/mgr/setup.sh
 tempfile=`${CMTROOT}/mgr/cmt -quiet build temporary_name`
 if test ! $? = 0 ; then tempfile=/tmp/cmt.$$; fi
-${CMTROOT}/mgr/cmt cleanup -sh -pack=KSKPiPiAlg -version=KSKPiPiAlg-00-00-01 -path=/besfs/users/yangliu/6.6.3.p01/KSKPiPi $* >${tempfile}; . ${tempfile}
+${CMTROOT}/mgr/cmt cleanup -sh -pack=KSKPiPiAlg -version=KSKPiPiAlg-00-00-01 -path=/besfs/users/caih/663p01/mywork $* >${tempfile}; . ${tempfile}
 /bin/rm -f ${tempfile}
 
