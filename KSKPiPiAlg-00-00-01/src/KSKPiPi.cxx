@@ -411,7 +411,6 @@ StatusCode KSKPiPi::initialize()
 	}
 */
 //----------------------end of book----------------------------
-cout << __LINE__ << endl;
 	log << MSG::INFO << "successfully return from initialize()" << endmsg;
 	return StatusCode::SUCCESS;
 
@@ -424,7 +423,6 @@ StatusCode KSKPiPi::execute()
 {
 	//std::cout << "execute()" << std::endl;
 	
-cout << __LINE__ << endl;
 	MsgStream log(msgSvc(),name());
 	log << MSG::INFO << "in execute()" << endreq;
 
@@ -434,7 +432,6 @@ cout << __LINE__ << endl;
 	//log << MSG::DEBUG <<"run, evtnum = "
 	  //  << runNo << " , "
 	    //<< event << endreq;
-cout << __LINE__ << endl;
 	//cout<<"event "<<event<<endl;
 	//cout <<"  " << endl;
 	Ncut0++;
@@ -542,7 +539,6 @@ cout << __LINE__ << endl;
 	if(m_ptrk_list.size() < 1 || m_ntrk_list.size() < 1) 
 		return StatusCode::SUCCESS;
 
-cout << __LINE__ << endl;
 
 	HepLorentzVector m_lv_lab(0.04, 0, 0, 4.260);
 	HepLorentzVector pkshort;
@@ -577,7 +573,6 @@ cout << __LINE__ << endl;
 			
 			VertexFit *vtxfit0 = VertexFit::instance();
 			SecondVertexFit *vtxfit = SecondVertexFit::instance();
-cout << __LINE__ << endl;
 	
 			itTrk = m_itTrk_begin + m_ptrk_list[i];
 			RecMdcKalTrack *mdcTrk_1 = (*itTrk)->mdcKalTrack();
@@ -606,7 +601,6 @@ cout << __LINE__ << endl;
 			if( vtxfit->chisq() < temp_chisq )
 			{
 				temp_chisq = vtxfit->chisq();
-cout << __LINE__ << endl;
 				temp_ptrk_index = i;
 				temp_ntrk_index = j;
 				//m_declen = vtxfit->decayLength();
@@ -635,7 +629,6 @@ cout << __LINE__ << endl;
         //suggest cut: |z0|<5 && r0<1
 	Vint iGood, ikp, ikm, ipip, ipim;
 	iGood.clear();
-cout << __LINE__ << endl;
 	ikp.clear();
 	ikm.clear();
 	ipip.clear();
@@ -667,7 +660,6 @@ cout << __LINE__ << endl;
 		if( i == m_ptrk_list[temp_ptrk_index] ) continue;
 		if( i == m_ntrk_list[temp_ntrk_index] ) continue;
 		EvtRecTrackIterator itTrk=evtRecTrkCol->begin() + i;
-cout << __LINE__ << endl;
 		if(!(*itTrk)->isMdcTrackValid()) continue;
 		RecMdcTrack *mdcTrk = (*itTrk)->mdcTrack();
 		double pch=mdcTrk->p();
@@ -675,7 +667,6 @@ cout << __LINE__ << endl;
 		double y0=mdcTrk->y();
 		double z0=mdcTrk->z();
 		double phi0=mdcTrk->helix(1);
-cout << __LINE__ << endl;
 		double xv=xorigin.x();
 		double yv=xorigin.y();
 		double Rxy=(x0-xv)*cos(phi0)+(y0-yv)*sin(phi0);
@@ -686,11 +677,9 @@ cout << __LINE__ << endl;
 
 		HepVector a = mdcTrk->helix();
 		HepSymMatrix Ea = mdcTrk->err();
-cout << __LINE__ << endl;
 		HepPoint3D point0(0.,0.,0.);    //the initial point for MDC reconstruction
 		HepPoint3D IP(xorigin[0], xorigin[1], xorigin[2]);
 		VFHelix helixip(point0,a,Ea);
-cout << __LINE__ << endl;
 		helixip.pivot(IP);
 		HepVector vecipa = helixip.a();
 		double Rvxy0=fabs(vecipa[0]);   //the nearest distance to IP in xy plane
@@ -700,7 +689,6 @@ cout << __LINE__ << endl;
 		m_rvz0=Rvz0;
 		m_rvphi0=Rvphi0;
 	
-cout << __LINE__ << endl;
 		m_tuple1->write();
 		
 		if(fabs(Rvz0) > 10.0 || fabs(Rvxy0) > 1.0 )	continue;
@@ -733,7 +721,6 @@ cout << __LINE__ << endl;
 	{		
 		EvtRecTrackIterator itTrk = evtRecTrkCol->begin() + iGood[i];
 		
-cout << __LINE__ << endl;
 		pid->init();
 		pid->setMethod(pid->methodProbability() );
 		pid->setChiMinCut(4);
@@ -774,7 +761,6 @@ cout << __LINE__ << endl;
 				double p3 = ptrk.mag();
 				ptrk.setE(sqrt(p3*p3+mpi*mpi));
 				ppim.push_back(ptrk);
-cout << __LINE__ << endl;
 			}
 		}
 		else
@@ -812,7 +798,6 @@ cout << __LINE__ << endl;
 	Ncut2++;
 	
 
-cout << __LINE__ << endl;
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -859,7 +844,6 @@ cout << __LINE__ << endl;
 		m_dang = dang;
 		m_eraw = eraw;
 		m_tuple2->write();
-cout << __LINE__ << endl;
 		if(eraw < m_energyThreshold) continue;
 		if(fabs(dang) < m_gammaAngleCut) continue;
 		iGam.push_back(i);
@@ -892,7 +876,6 @@ cout << __LINE__ << endl;
     		ptrk.setPx(eraw*sin(the)*cos(phi));
     		ptrk.setPy(eraw*sin(the)*sin(phi));
     		ptrk.setPz(eraw*cos(the));
-cout << __LINE__ << endl;
     		ptrk.setE(eraw);
 
 
@@ -930,7 +913,6 @@ cout << __LINE__ << endl;
 	RecMdcKalTrack *pimTrk = (*(evtRecTrkCol->begin() + ipim[0]))->mdcKalTrack();
 	RecMdcKalTrack *kpTrk = (*(evtRecTrkCol->begin() + ikp[0]))->mdcKalTrack();
 	RecMdcKalTrack *ks_pipTrk = (*(evtRecTrkCol->begin() + m_ptrk_list[temp_ptrk_index]))->mdcKalTrack();
-cout << __LINE__ << endl;
 	RecMdcKalTrack *ks_pimTrk = (*(evtRecTrkCol->begin() + m_ntrk_list[temp_ntrk_index]))->mdcKalTrack();	
 
 	//pimTrk->setPidType(RecMdcKalTrack::pion);	
@@ -962,7 +944,6 @@ cout << __LINE__ << endl;
 	VertexFit* vtxfit1 = VertexFit::instance();
 	vtxfit1->init();
 	vtxfit1->AddTrack(0, wvks_pipTrk);
-cout << __LINE__ << endl;
 	vtxfit1->AddTrack(1, wvks_pimTrk);
 	vtxfit1->AddVertex(0,vxpar,0,1);
 	if(!vtxfit1->Fit(0)) return SUCCESS;
@@ -992,7 +973,6 @@ cout << __LINE__ << endl;
 	svtxfit->setPrimaryVertex(vtxfit2->vpar(0));
 	if (!svtxfit->Fit())	return SUCCESS;
 	Ncut_svtxfit++;
-cout << __LINE__ << endl;
 ///////////// finished  vertexfit
 
 	WTrackParameter    	wks_pip 	= wvks_pipTrk;		
@@ -1025,7 +1005,6 @@ cout << __LINE__ << endl;
 	m_tuple_vf->write();
 */
 
-cout << __LINE__ << endl;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1055,7 +1034,6 @@ cout << __LINE__ << endl;
 				//kmfit->AddTrack(0, wks);
 				kmfit->AddTrack(2, wkp);
 				kmfit->AddTrack(3, wpim);
-cout << __LINE__ << endl;
 				kmfit->AddTrack(4, 0.0, g1Trk);
 				kmfit->AddTrack(5, 0.0, g2Trk);
 				kmfit->AddFourMomentum(0, ecms);
@@ -1085,7 +1063,6 @@ cout << __LINE__ << endl;
 			kmfit->AddTrack(1, wks_pim);
 			kmfit->AddTrack(2, wkp);
 			kmfit->AddTrack(3, wpim);
-cout << __LINE__ << endl;
 			kmfit->AddTrack(4, 0.0, g1Trk);
 			kmfit->AddTrack(5, 0.0, g2Trk);
 			kmfit->AddFourMomentum(0, ecms);
@@ -1112,7 +1089,6 @@ cout << __LINE__ << endl;
 				for ( int k = 0; k < 6; k++ )
 				{
 					kmfit->pfit(k).boost(-0.093,0,0);
-cout << __LINE__ << endl;
 				}
 				m_4momentum_index_4c=0;
 				for ( int k = 0; k < 6; k++ )
@@ -1152,7 +1128,6 @@ cout << __LINE__ << endl;
 	if(m_test5C==1)
 	{
 		HepLorentzVector ecms(0.034, 0, 0, 4.260);
-cout << __LINE__ << endl;
 		double chisq = 9999.;
 		int ig1 = -1;
 		int ig2 = -1;
@@ -1277,7 +1252,7 @@ cout << __LINE__ << endl;
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 StatusCode KSKPiPi::finalize()
 {
-	//cout << "total number:			" << Ncut0 << endl;
+	cout << "total number:			" << Ncut0 << endl;
    	//cout << "Pass k_short_cut:		" << Ncut_ks << endl;	
 	//cout << "nGood == 2, nCharge == 0:	" << Ncut1 << endl;
 	//cout << "Pass Pid:			" << Ncut2 << endl;
