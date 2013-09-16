@@ -1,0 +1,16 @@
+#include "$VERTEXFITROOT/share/jobOptions_VertexDbSvc.txt"
+ApplicationMgr.DLLs += {"KSKPiPiAlg"};
+ApplicationMgr.TopAlg += { "KSKPiPi" };
+
+KSKPiPi.Vr0cut = 1.0;
+KSKPiPi.Vz0cut = 5.0;
+
+KSKPiPi.EnergyThreshold = 0.04;
+KSKPiPi.GammaPhiCut = 20.0;
+KSKPiPi.GammaThetaCut = 20.0;
+KSKPiPi.GammaAngleCut = 20.0;
+
+KSKPiPi.Test4C = 1;
+KSKPiPi.Test5C = 1;
+KSKPiPi.CheckDedx = 1;				
+KSKPiPi.CheckTof = 1;
