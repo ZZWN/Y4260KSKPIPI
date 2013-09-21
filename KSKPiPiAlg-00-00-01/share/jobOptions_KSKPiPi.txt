@@ -14,3 +14,4 @@ KSKPiPi.Test4C = 1;
 KSKPiPi.Test5C = 1;
 KSKPiPi.CheckDedx = 1;				
 KSKPiPi.CheckTof = 1;
+KSKPiPi.Dorecoil = 1;

@@ -69,6 +69,7 @@ KSKPiPi::KSKPiPi(const std::string& name, ISvcLocator* pSvcLocator):
 	declareProperty("Test5C", 	   m_test5C = 1);
 	declareProperty("CheckDedx", 	   m_checkDedx = 1);
  	declareProperty("CheckTof",  	   m_checkTof = 1);
+ 	declareProperty("Dorecoil",  	   m_Dorecoil = 1);
 }
 
 //*******************************************************
@@ -206,6 +207,25 @@ StatusCode KSKPiPi::initialize()
 		}
 	}
 */
+	if (m_Dorecoil == 1)
+	{
+		NTuplePtr nt_recoil(ntupleSvc(), "FILE1/recoil");
+		if (nt_recoil) m_tuple_recoil = nt_recoil;
+		else
+		{
+			m_tuple_recoil = ntupleSvc()->book("FILE1/recoil", CLID_ColumnWiseTuple, "for recoil");
+			if (m_tuple_recoil)
+			{
+				status = m_tuple_recoil->addItem ("4momentum_index", 	m_4momentum_index_recoil, 0,10);
+				status = m_tuple_recoil->addIndexedItem ("4momentum_matrix", 	m_4momentum_index_recoil, 4,m_4momentum_recoil);
+			}	
+			else
+			{
+				log <<MSG::ERROR << "Cannot book   N-Tuple_recoil" 	<< long(m_tuple_recoil) << endmsg;
+				return StatusCode::FAILURE;
+			}
+		}
+	}
 	if (m_test4C==1)
 	{
 		NTuplePtr nt4(ntupleSvc(),"FILE1/fit4c");
@@ -978,21 +998,82 @@ StatusCode KSKPiPi::execute()
 	WTrackParameter    	wks_pip 	= wvks_pipTrk;		
 	//WTrackParameter    	wks_pip 	= vtxfit1->wtrk(0);
 	HepLorentzVector 	lv_ks_pip 	= wks_pip.p();
+	//lv_ks_pip.boost(-0.094, 0, 0);
 	
 	WTrackParameter    	wks_pim 	= wvks_pimTrk;	
 	//WTrackParameter    	wks_pim 	= vtxfit1->wtrk(1);
 	HepLorentzVector 	lv_ks_pim 	= wks_pim.p();
+	//lv_ks_pim.boost(-0.094, 0, 0);
 
 	WTrackParameter		wks		= vtxfit0_track;
-	//WTrackParameter		wks		= vtxfit1->wVirtualTrack(0);
+	//WTrackParameter	wks		= vtxfit1->wVirtualTrack(0);
 	HepLorentzVector	lv_ks		= wks.p();
-
+	//lv_ks.boost(-0.094, 0, 0);
 	
 	WTrackParameter       	wpim 		= vtxfit2->wtrk(1);
 	HepLorentzVector    	lv_pim 		= wpim.p();
-
+	//lv_pim.boost(-0.094, 0, 0);
+	
 	WTrackParameter        	wkp 		= vtxfit2->wtrk(0);
 	HepLorentzVector     	lv_kp 		= wkp.p();	
+	//lv_kp.boost(-0.094, 0, 0);
+
+
+	if(m_Dorecoil == 1)
+	{	
+		lv_ks_pip.boost(-0.094, 0, 0);
+		lv_ks_pim.boost(-0.094, 0, 0);
+		//lv_ks.boost(-0.094, 0, 0);
+		lv_pim.boost(-0.094, 0, 0);
+		lv_kp.boost(-0.094, 0, 0);
+	
+		HepLorentzVector lv_gam;
+		for( int i=0; i<nGam; i++)
+		{
+			lv_gam +=pGam[i];
+		}
+
+		HepLorentzVector ecms(0.04, 0, 0, 4.260);
+		m_4momentum_index_recoil=0;
+		
+		m_4momentum_recoil[0][0] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).e(); //for ks_pi+`s recoil_fourmomentum
+		m_4momentum_recoil[0][1] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).px(); 
+		m_4momentum_recoil[0][2] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).py(); 
+		m_4momentum_recoil[0][3] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).pz(); 
+		++m_4momentum_index_recoil;
+		
+		m_4momentum_recoil[1][0] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).e(); //for ks_pi-`s recoil_fourmomentum
+		m_4momentum_recoil[1][1] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).px(); 
+		m_4momentum_recoil[1][2] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).py(); 
+		m_4momentum_recoil[1][3] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).pz(); 
+		++m_4momentum_index_recoil;
+
+		m_4momentum_recoil[2][0] = (ecms - lv_gam - lv_pim - lv_ks_pip - lv_ks_pim).e(); //for k+`s recoil_fourmomentum
+		m_4momentum_recoil[2][1] = (ecms - lv_gam - lv_pim - lv_ks_pip - lv_ks_pim).px(); 
+		m_4momentum_recoil[2][2] = (ecms - lv_gam - lv_pim - lv_ks_pip - lv_ks_pim).py(); 
+		m_4momentum_recoil[2][3] = (ecms - lv_gam - lv_pim - lv_ks_pip - lv_ks_pim).pz(); 
+		++m_4momentum_index_recoil;
+		
+		m_4momentum_recoil[3][0] = (ecms - lv_gam - lv_kp - lv_ks_pip - lv_ks_pim).e(); //for pi-`s recoil_fourmomentum
+		m_4momentum_recoil[3][1] = (ecms - lv_gam - lv_kp - lv_ks_pip - lv_ks_pim).px(); 
+		m_4momentum_recoil[3][2] = (ecms - lv_gam - lv_kp - lv_ks_pip - lv_ks_pim).py(); 
+		m_4momentum_recoil[3][3] = (ecms - lv_gam - lv_kp - lv_ks_pip - lv_ks_pim).pz(); 
+		++m_4momentum_index_recoil;
+		
+		m_4momentum_recoil[4][0] = (ecms - lv_kp - lv_pim - lv_ks_pip - lv_ks_pim).e(); //for pi0`s recoil fourmomentum
+		m_4momentum_recoil[4][1] = (ecms - lv_kp - lv_pim - lv_ks_pip - lv_ks_pim).px(); 
+		m_4momentum_recoil[4][2] = (ecms - lv_kp - lv_pim - lv_ks_pip - lv_ks_pim).py(); 
+		m_4momentum_recoil[4][3] = (ecms - lv_kp - lv_pim - lv_ks_pip - lv_ks_pim).pz(); 
+		++m_4momentum_index_recoil;
+		
+		m_4momentum_recoil[5][0] = (ecms - lv_gam - lv_kp - lv_pim).e();             //for kshort`s recoil_fourmomentum
+		m_4momentum_recoil[5][1] = (ecms - lv_gam - lv_kp - lv_pim).px();             
+		m_4momentum_recoil[5][2] = (ecms - lv_gam - lv_kp - lv_pim).py();             
+		m_4momentum_recoil[5][3] = (ecms - lv_gam - lv_kp - lv_pim).pz();             
+		++m_4momentum_index_recoil;
+		
+		m_tuple_recoil->write();
+	}
 /*
 	m_mpip_ks = lv_ks_pip.vect().mag();
 	m_mpim_ks = lv_ks_pim.vect().mag();
@@ -1014,7 +1095,6 @@ StatusCode KSKPiPi::execute()
 	
 	//Apply Kinematic 4C fit
 	
-	//cout<<"before 4c" <<endl;
 	if(m_test4C==1)
 	{
 		HepLorentzVector ecms(0.04, 0, 0, 4.260);
@@ -1088,7 +1168,7 @@ StatusCode KSKPiPi::execute()
 			
 				for ( int k = 0; k < 6; k++ )
 				{
-					kmfit->pfit(k).boost(-0.093,0,0);
+					kmfit->pfit(k).boost(-0.094, 0, 0);
 				}
 				m_4momentum_index_4c=0;
 				for ( int k = 0; k < 6; k++ )
@@ -1202,7 +1282,7 @@ StatusCode KSKPiPi::execute()
 
 				for ( int k = 0; k < 6; k++ )
                                 {
-                                        kmfit->pfit(k).boost(-0.093,0,0);
+                                        kmfit->pfit(k).boost(-0.094, 0, 0);
                                 }
 				m_4momentum_index_5c=0;
                                 for ( int k = 0; k < 6; k++ )

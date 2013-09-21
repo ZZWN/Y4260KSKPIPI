@@ -38,7 +38,8 @@ private:
 	// 
 	int m_test4C;
 	int m_test5C;
-
+	int m_Dorecoil;
+	
 	// 
 	int m_checkDedx;
 	int m_checkTof;
@@ -90,6 +91,11 @@ private:
 	NTuple::Item<double>  	m_mkp_vf;
 	NTuple::Item<double>  	m_mks_vf;
 	NTuple::Item<double>  	m_etot_vf;
+	
+	NTuple::Tuple*  m_tuple_recoil;
+	NTuple::Item<long>      m_4momentum_index_recoil;
+	NTuple::Matrix<double>  m_4momentum_recoil;
+	
 	
 	NTuple::Tuple*  m_tuple4;     // KSKPiPi 4C
 	NTuple::Item<double>  	m_chi1;
