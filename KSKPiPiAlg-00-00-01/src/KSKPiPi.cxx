@@ -525,10 +525,6 @@ StatusCode KSKPiPi::execute()
 							m_pionm_bef   = (*iter_mc)->initialFourMomentum().vect().mag();
 							m_pionm_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();        
 						}
-						else
-						{
-							cout << "                       strange pi-"	<< endl;
-						}
 
 					}
 					if((*iter_mc)->particleProperty() == 310)	//kshort
