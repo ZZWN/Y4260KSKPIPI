@@ -70,6 +70,7 @@ KSKPiPi::KSKPiPi(const std::string& name, ISvcLocator* pSvcLocator):
 	declareProperty("CheckDedx", 	   m_checkDedx = 1);
  	declareProperty("CheckTof",  	   m_checkTof = 1);
  	declareProperty("Dorecoil",  	   m_Dorecoil = 1);
+ 	declareProperty("McTruth",  	   m_McTruth = 1);
 }
 
 //*******************************************************
@@ -143,7 +144,7 @@ StatusCode KSKPiPi::initialize()
 			return StatusCode::FAILURE;
 		}
 	}
-/*
+
 	NTuplePtr nt_chi(ntupleSvc(), "FILE1/mchi2");
 	if (nt_chi) m_tuple_chi = nt_chi;
 	else
@@ -161,28 +162,34 @@ StatusCode KSKPiPi::initialize()
 		}
 		
 	}
-
-	NTuplePtr nt_McTruth(ntupleSvc(), "FILE1/mctruth");
-	if (nt_McTruth) m_tuple_mctruth = nt_McTruth;
-	else
+	if(m_McTruth == 1)
 	{
-		m_tuple_mctruth = ntupleSvc()->book("FILE1/mctruth",CLID_ColumnWiseTuple, "check mctruth");
-		if(m_tuple_mctruth)
-		{
-			status = m_tuple_mctruth->addItem("mctrth_pionp_bef",		       m_pionp_bef);
-			status = m_tuple_mctruth->addItem("mctrth_pionm_bef",		       m_pionm_bef);
-			status = m_tuple_mctruth->addItem("mctrth_kshort_bef",		      m_kshort_bef);
-			status = m_tuple_mctruth->addItem("mctrth_kaonp_bef",		       m_kaonp_bef);
-			status = m_tuple_mctruth->addItem("mctrth_pion0_bef",   	       m_pion0_bef);
-			status = m_tuple_mctruth->addItem("mctrth_pionp_costh_bef",	 m_pionp_costh_bef);
-			status = m_tuple_mctruth->addItem("mctrth_pionm_costh_bef",	 m_pionm_costh_bef);
-			status = m_tuple_mctruth->addItem("mctrth_kshort_costh_bef",	m_kshort_costh_bef);
-			status = m_tuple_mctruth->addItem("mctrth_kaonp_costh_bef",	 m_kaonp_costh_bef);
-			status = m_tuple_mctruth->addItem("mctrth_pion0_costh_bef",	 m_pion0_costh_bef);
-		}
+		NTuplePtr nt_McTruth(ntupleSvc(), "FILE1/mctruth");
+		if (nt_McTruth) m_tuple_mctruth = nt_McTruth;
 		else
 		{
-			log << MSG::ERROR << "    Cannot book N-Tuple_mctrth:" << long(m_tuple_mctruth) << endmsg;
+			m_tuple_mctruth = ntupleSvc()->book("FILE1/mctruth",CLID_ColumnWiseTuple, "check mctruth");
+			if(m_tuple_mctruth)
+			{
+				status = m_tuple_mctruth->addItem("pi0_mc_recoil_mass",		       m_pi0_mc_recoil);
+				status = m_tuple_mctruth->addItem("pi0_mc_mass",		       m_pi0_mc_mass);
+				status = m_tuple_mctruth->addItem("mctrth_pionp_bef",		       m_pionp_ks_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pionm_bef",		       m_pionm_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pionm_ks_bef",	       m_pionm_ks_bef);
+				status = m_tuple_mctruth->addItem("mctrth_kshort_bef",		      m_kshort_bef);
+				status = m_tuple_mctruth->addItem("mctrth_kaonp_bef",		       m_kaonp_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pion0_bef",   	       m_pion0_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pionp_costh_bef",	 m_pionp_ks_costh_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pionm_costh_bef",	 m_pionm_costh_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pionm_ks_costh_bef",	 m_pionm_ks_costh_bef);
+				status = m_tuple_mctruth->addItem("mctrth_kshort_costh_bef",	m_kshort_costh_bef);
+				status = m_tuple_mctruth->addItem("mctrth_kaonp_costh_bef",	 m_kaonp_costh_bef);
+				status = m_tuple_mctruth->addItem("mctrth_pion0_costh_bef",	 m_pion0_costh_bef);
+			}
+			else
+			{
+				log << MSG::ERROR << "    Cannot book N-Tuple_mctrth:" << long(m_tuple_mctruth) << endmsg;
+			}
 		}
 	}
 	
@@ -206,7 +213,7 @@ StatusCode KSKPiPi::initialize()
 			return StatusCode::FAILURE;
 		}
 	}
-*/
+
 	if (m_Dorecoil == 1)
 	{
 		NTuplePtr nt_recoil(ntupleSvc(), "FILE1/recoil");
@@ -457,65 +464,147 @@ StatusCode KSKPiPi::execute()
 	Ncut0++;
 	
 
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////  MC TRUTH   ////////////////////////////////////////////////////////
-	SmartDataPtr<Event::McParticleCol> mcParticleCol(eventSvc(),                                                    
-			"/Event/MC/McParticleCol");                                    
-	if(runNo<0)
-	{                                                                                   
-		if(!mcParticleCol)
-		{                                                                                           
-			//log << MSG::ERROR << "Could not retrieve McParticelCol" << endreq;                                          
-			return StatusCode::FAILURE;                                                                                 
-		}                                                                                                             
-		else	
-		{                                                                                                         
-			bool PsiDecay(false);                                                                                      
-			Event::McParticleCol::iterator iter_mc = mcParticleCol->begin();                                            
-			for (; iter_mc != mcParticleCol->end(); iter_mc++)
-			{                                                         
-				if ((*iter_mc)->primaryParticle() ) continue;                                                             
-				if (!(*iter_mc)->decayFromGenerator() ) continue;                                                         
-				//if ( ((*iter_mc)->mother()).trackIndex()<3 ) continue;                                                  
-				if ((*iter_mc)->particleProperty()==9030443) 
-				{
-					PsiDecay = true; 
-				}                                            
-				if (!PsiDecay) continue;                                                                                 
-				//if(!(*iter_mc)->leafParticle()) continue;                                                               
-				if((*iter_mc)->particleProperty() == 211)
-				{                                                                
-					m_pionp_bef = (*iter_mc)->initialFourMomentum().vect().mag();                                           
-					m_pionp_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();                                       
-				}                                                                                                         
-				if((*iter_mc)->particleProperty() == -211) 	//pi-
-				{                                                               
-					m_pionm_bef   = (*iter_mc)->initialFourMomentum().vect().mag();                                     
-					m_pionm_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();        
-				}
-				if((*iter_mc)->particleProperty() == 310)	//kshort
-				{
-					m_kshort_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
-					m_kshort_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
-				}                                     
-                                if((*iter_mc)->particleProperty() == 321)     	//k+                       
-				{
-                                        m_kaonp_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
-                                        m_kaonp_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
-                                }
-                                if((*iter_mc)->particleProperty() == 111)    	//pi0                            
-				{
-                                        m_pion0_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
-                                        m_pion0_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
-                                }                                                                    
-			}                                                                                                           
-		}                                                                                                             
-	}                                                 
-	m_tuple_mctruth->write();
+	if(m_McTruth ==2)
+	{
+		SmartDataPtr<Event::McParticleCol> mcParticleCol(eventSvc(),                                                    
+				"/Event/MC/McParticleCol");                                    
+		if(runNo<0)
+		{                                                                                   
+			if(!mcParticleCol)
+			{	                                                                                           
+				//log << MSG::ERROR << "Could not retrieve McParticelCol" << endreq;                                          
+				return StatusCode::FAILURE;                                                                                 
+			}                                                                                                             
+			else	
+			{                                                                                                         
+				bool PsiDecay(false);                                                                                      
+				Event::McParticleCol::iterator iter_mc = mcParticleCol->begin();                                            
+				HepLorentzVector pY4260, ppi0_mc, pks_mc, pkp_mc, ppim_mc, ppim_ks_mc, ppip_ks_mc; 
+				HepLorentzVector ecms( 0.04, 0, 0, 4.26 );
+//				cout <<"ecms"<<ecms.boost(-ecms.boostVector())<<endl;
+				int i=0;
+				for (; iter_mc != mcParticleCol->end(); iter_mc++)
+				{      ;                                                   
+					if ((*iter_mc)->primaryParticle() ) continue;                                                             
+					if (!(*iter_mc)->decayFromGenerator() ) continue;                                                         
+					//if ( ((*iter_mc)->mother()).trackIndex()<3 ) continue;                                                  
+					if ((*iter_mc)->particleProperty()==9030443) 
+					{
+						pY4260 = (*iter_mc)->initialFourMomentum();
+						PsiDecay = true; 
+					}                                            
+					if (!PsiDecay) continue;                                                                                 
+					//if(!(*iter_mc)->leafParticle()) continue;                                                               
+					if((*iter_mc)->particleProperty() == 211)
+					{                                                                
+						if ( ((*iter_mc)->mother()).particleProperty() == 310 )
+						{	++i;
+							ppip_ks_mc = (*iter_mc)->initialFourMomentum();
+							m_pionp_ks_bef = (*iter_mc)->initialFourMomentum().vect().mag();
+							m_pionp_ks_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();   
+						}                                    
+						else
+						{
+						cout << "                         strange pi+"	<< endl;
+						}
+					}                                                                                                         
+					if((*iter_mc)->particleProperty() == -211) 	//pi-
+					{                                          
+						if ( ((*iter_mc)->mother()).particleProperty() == 310 )
+						{	++i;
+							ppim_ks_mc   = (*iter_mc)->initialFourMomentum();
+							m_pionm_ks_bef   = (*iter_mc)->initialFourMomentum().vect().mag();
+							m_pionm_ks_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();        
+						}
+						if ( ((*iter_mc)->mother()).particleProperty() == 9030443 )
+						{	++i;
+							ppim_mc   = (*iter_mc)->initialFourMomentum();                                     
+							m_pionm_bef   = (*iter_mc)->initialFourMomentum().vect().mag();
+							m_pionm_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();        
+						}
+						else
+						{
+							cout << "                       strange pi-"	<< endl;
+						}
+
+					}
+					if((*iter_mc)->particleProperty() == 310)	//kshort
+					{	++i;
+						pks_mc    = (*iter_mc)->initialFourMomentum();
+						m_kshort_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
+						m_kshort_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
+					}                                     
+					if((*iter_mc)->particleProperty() == 321)     	//k+                       
+					{	++i;
+						pkp_mc    = (*iter_mc)->initialFourMomentum();
+						m_kaonp_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
+						m_kaonp_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
+					}
+					if((*iter_mc)->particleProperty() == 111)    	//pi0                            
+					{	++i;
+						ppi0_mc    = (*iter_mc)->initialFourMomentum();
+						m_pion0_bef    = (*iter_mc)->initialFourMomentum().vect().mag();
+						m_pion0_costh_bef = (*iter_mc)->initialFourMomentum().vect().cosTheta();
+					}                           
+					else
+					{
+						cout << "                       strange particle "  << endl;
+					}
+				}       
+				
+//				HepLorentzVector a1,a2,a3,a4,a5,a6,a7;
+				HepLorentzVector a1(ecms - pks_mc           - pkp_mc - ppim_mc );
+				HepLorentzVector a2(ecms - pks_mc - ppi0_mc          - ppim_mc );
+				HepLorentzVector a3(ecms - pks_mc - ppi0_mc - pkp_mc           );
+				HepLorentzVector a4(ecms         - ppi0_mc - pkp_mc - ppim_mc );
+				  
+cout <<"===============================================" << i << endl;
+				           
+cout <<"++++++++++++++++++++++++++++++++++++++" <<endl;
+cout <<"  ppi0_mc =    " <<ppi0_mc    << endl;//cout for test
+cout <<"  pks_pip_mc = " <<ppip_ks_mc << endl;
+cout <<"  pks_pim_mc = " <<ppim_ks_mc << endl;
+cout <<"  pkp_mc   =   " <<pkp_mc     << endl;
+cout <<"  ppim_mc  =   " <<ppim_mc    << endl;
+cout <<"  pks_mc   =   " <<pks_mc     << endl;
+cout <<"++++++++++++++++++++++++++++++++++++++" <<endl;
+cout << " a2 = " << a2 << endl;
+cout <<"  ptot =    " << ( pks_mc + ppi0_mc + pkp_mc + ppim_mc -ecms)  << endl;//cout for test
+cout <<" a1 - a1 = " << 
+   a1 + a2 + a3 + a4 
+ - (ecms - pks_mc           - pkp_mc - ppim_mc )
+ - (ecms - pks_mc - ppi0_mc          - ppim_mc ) 
+ - (ecms - pks_mc - ppi0_mc - pkp_mc           )
+ - (ecms         - ppi0_mc - pkp_mc - ppim_mc )
+ << endl;
+cout <<" a1 - a1 = " << 
+   a1 + a2 + a3 + a4 -  4 * ecms 
+  + pks_mc + pkp_mc + ppim_mc 
+  + pks_mc + ppi0_mc + ppim_mc 
+  + pks_mc + ppi0_mc + pkp_mc           
+  + ppi0_mc + pkp_mc + ppim_mc 
+ << endl;
+cout <<"  a1+a2+a3+a4 = " << a1 + a2 + a3 + a4 - ecms + 3 * (pks_mc + ppi0_mc + pkp_mc + ppim_mc -ecms)<< endl;
+cout <<"  ppi0_recoil =    " << a1  << "mpi0_recoil"<< endl;//cout for test
+cout <<"  pkp_recoil   =   " << a2  << "mkp_recoil" << endl;
+cout <<"  ppim_recoil  =   " << a3  << "mpim_recoil"<<endl;
+cout <<"  pks_recoil   =   " << a4  << "mks_recoil" <<endl;
+
+cout << " a1 - ppi0_mc" << a1 - ppi0_mc << endl;
+cout <<"  mpi0_mc =    " <<ppi0_mc.m()    << endl;
+cout <<"  mpi0_recoil =    " << a1.m()  << endl;
+
+				m_pi0_mc_recoil=(ecms - ppim_mc - pkp_mc - pks_mc).m();
+				m_pi0_mc_mass=ppi0_mc.m2();
+			}                                                                                                             
+		}                                                 
+		m_tuple_mctruth->write();
+	}
 
 
-*/
 
 
 
@@ -1017,7 +1106,7 @@ StatusCode KSKPiPi::execute()
 	WTrackParameter        	wkp 		= vtxfit2->wtrk(0);
 	HepLorentzVector     	lv_kp 		= wkp.p();	
 	//lv_kp.boost(-0.094, 0, 0);
-
+/*
 
 	if(m_Dorecoil == 1)
 	{	
@@ -1033,15 +1122,20 @@ StatusCode KSKPiPi::execute()
 			lv_gam +=pGam[i];
 		}
 
-		HepLorentzVector ecms(0.04, 0, 0, 4.260);
+		HepLorentzVector ecms(0., 0., 0., 4.260);
 		m_4momentum_index_recoil=0;
 		
+cout <<"=============="<< endl;		
 		m_4momentum_recoil[0][0] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).e(); //for ks_pi+`s recoil_fourmomentum
+cout << m_4momentum_recoil[0][0] <<endl;
 		m_4momentum_recoil[0][1] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).px(); 
+cout << m_4momentum_recoil[0][1] <<endl;
 		m_4momentum_recoil[0][2] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).py(); 
+cout << m_4momentum_recoil[0][2] <<endl;
 		m_4momentum_recoil[0][3] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pim).pz(); 
+cout << m_4momentum_recoil[0][3] <<endl;
 		++m_4momentum_index_recoil;
-		
+cout <<"=============="<< endl;		
 		m_4momentum_recoil[1][0] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).e(); //for ks_pi-`s recoil_fourmomentum
 		m_4momentum_recoil[1][1] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).px(); 
 		m_4momentum_recoil[1][2] = (ecms - lv_gam - lv_kp - lv_pim - lv_ks_pip).py(); 
@@ -1073,7 +1167,7 @@ StatusCode KSKPiPi::execute()
 		++m_4momentum_index_recoil;
 		
 		m_tuple_recoil->write();
-	}
+	}*/
 /*
 	m_mpip_ks = lv_ks_pip.vect().mag();
 	m_mpim_ks = lv_ks_pim.vect().mag();
@@ -1097,7 +1191,7 @@ StatusCode KSKPiPi::execute()
 	
 	if(m_test4C==1)
 	{
-		HepLorentzVector ecms(0.04, 0, 0, 4.260);
+		HepLorentzVector ecms(0.0, 0, 0, 4.260);
 		
 		double chisq = 9999.;
 		int ig1 = -1;
@@ -1168,7 +1262,7 @@ StatusCode KSKPiPi::execute()
 			
 				for ( int k = 0; k < 6; k++ )
 				{
-					kmfit->pfit(k).boost(-0.094, 0, 0);
+					kmfit->pfit(k).boost(-ecms.boostVector());
 				}
 				m_4momentum_index_4c=0;
 				for ( int k = 0; k < 6; k++ )
@@ -1190,18 +1284,71 @@ StatusCode KSKPiPi::execute()
 				m_4momentum_4c[7][2] = (kmfit->pfit(0)+kmfit->pfit(1)).py();
 				m_4momentum_4c[7][3] = (kmfit->pfit(0)+kmfit->pfit(1)).pz();
 				++m_4momentum_index_4c;
-				
-				
+
+
 				m_tuple4->write();
 				Ncut4++;
 			}
+		}
+		else
+		{
+			return StatusCode::SUCCESS;
 		}
 	}
 
 
 
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+	if(m_Dorecoil == 1)
+	{
+		HepLorentzVector ecms(0.00, 0, 0, 4.260);
+		lv_ks_pip.boost(-ecms.boostVector());
+		lv_ks_pim.boost(-ecms.boostVector());
+		//lv_ks.boost(-ecms.boostVector());
+		lv_pim.boost(-ecms.boostVector());
+		lv_kp.boost(-ecms.boostVector());
+
+		HepLorentzVector lv_gam;
+		for( int i=0; i<nGam; i++)
+		{
+			lv_gam +=pGam[i];
+		}
+
+		m_4momentum_index_recoil=0;
+		for(int i=0; i<6;  i++)
+		{
+			m_4momentum_recoil[i][0] = (ecms - kmfit->pfit(i)).e(); //for ks_pi+ ks_pi- k+ pi- gamma1 gamma2 recoil_fourmomentum
+			m_4momentum_recoil[i][1] = (ecms - kmfit->pfit(i)).px();
+ 			m_4momentum_recoil[i][2] = (ecms - kmfit->pfit(i)).py();
+			m_4momentum_recoil[i][3] = (ecms - kmfit->pfit(i)).pz();
+			++m_4momentum_index_recoil;
+		}
+		m_4momentum_recoil[6][0] = (ecms - kmfit->pfit(0) - kmfit->pfit(1)).e(); //for ks recoil_fourmomentum
+		m_4momentum_recoil[6][1] = (ecms - kmfit->pfit(0) - kmfit->pfit(1)).px();
+		m_4momentum_recoil[6][2] = (ecms - kmfit->pfit(0) - kmfit->pfit(1)).py();
+		m_4momentum_recoil[6][3] = (ecms - kmfit->pfit(0) - kmfit->pfit(1)).pz();
+		++m_4momentum_index_recoil;
+
+		m_4momentum_recoil[7][0] = (ecms - kmfit->pfit(4) - kmfit->pfit(5)).e(); //for pi0 recoil_fourmomentum
+		m_4momentum_recoil[7][1] = (ecms - kmfit->pfit(4) - kmfit->pfit(5)).px();
+		m_4momentum_recoil[7][2] = (ecms - kmfit->pfit(4) - kmfit->pfit(5)).py();
+		m_4momentum_recoil[7][3] = (ecms - kmfit->pfit(4) - kmfit->pfit(5)).pz();
+		++m_4momentum_index_recoil;
+		m_tuple_recoil->write();
+	}
+
+
+
+
+
+
+
+
+	///////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////
 	//Apply Kinematic 5C Fit
 
 	//find the best combination over all possible pi+ pi- gamma gamma pair
@@ -1282,7 +1429,7 @@ StatusCode KSKPiPi::execute()
 
 				for ( int k = 0; k < 6; k++ )
                                 {
-                                        kmfit->pfit(k).boost(-0.094, 0, 0);
+                                        kmfit->pfit(k).boost(-ecms.boostVector());
                                 }
 				m_4momentum_index_5c=0;
                                 for ( int k = 0; k < 6; k++ )

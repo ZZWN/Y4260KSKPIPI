@@ -39,6 +39,7 @@ private:
 	int m_test4C;
 	int m_test5C;
 	int m_Dorecoil;
+	int m_McTruth;
 	
 	// 
 	int m_checkDedx;
@@ -50,13 +51,17 @@ private:
 	NTuple::Item<double> m_chi_4c;
 
 	NTuple::Tuple* m_tuple_mctruth;
+	NTuple::Item<double> m_pi0_mc_recoil;
+	NTuple::Item<double> m_pi0_mc_mass;
 	NTuple::Item<double> m_pionm_bef;
-	NTuple::Item<double> m_pionp_bef;
+	NTuple::Item<double> m_pionm_ks_bef;
+	NTuple::Item<double> m_pionp_ks_bef;
 	NTuple::Item<double> m_kshort_bef;
 	NTuple::Item<double> m_kaonp_bef;
 	NTuple::Item<double> m_pion0_bef;
-	NTuple::Item<double> m_pionp_costh_bef;
+	NTuple::Item<double> m_pionp_ks_costh_bef;
 	NTuple::Item<double> m_pionm_costh_bef;
+	NTuple::Item<double> m_pionm_ks_costh_bef;
 	NTuple::Item<double> m_kshort_costh_bef;
 	NTuple::Item<double> m_kaonp_costh_bef;
 	NTuple::Item<double> m_pion0_costh_bef;
