@@ -6,3 +6,7 @@ Y(4260)->Ks K+ pi- pi0
 
 test test
 test the command
+<<<<<<< HEAD
+=======
+test the command "git reset"
+>>>>>>> master
